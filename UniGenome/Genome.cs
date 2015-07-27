@@ -17,6 +17,8 @@ namespace UniGenome
         public List<NumberOperator> NumberOperators { get; private set; }
         public List<BoolOperator> BoolOperators { get; private set; }
 
+        public bool InputsPushed { get; private set; }
+
         private long[] NumberInputsValues;
         private bool[] BoolInputsValues;
 
@@ -314,8 +316,9 @@ namespace UniGenome
         {
             if (this.NumberOfBoolInputs == boolInputs.Length && this.NumberOfNumberInputs == numberInputs.Length)
             {
-            this.BoolInputsValues = boolInputs;
-            this.NumberInputsValues = numberInputs;
+                this.BoolInputsValues = boolInputs;
+                this.NumberInputsValues = numberInputs;
+                this.InputsPushed = true;
             }
             else
             {
@@ -417,14 +420,24 @@ namespace UniGenome
             }
         }
  
+        private void CheckPushedInputs()
+        {
+            if (!InputsPushed)
+            {
+                throw new Exception("Genome must contain pushed inputs before getting any output.");
+            }
+        }
+
         public long GetNumberOutput(int index)
         {
+            CheckPushedInputs();
             CheckIndex(index, this.NumberOutputNodes.Length);
             return this.GetNumberNodeValue(this.NumberOutputNodes[index]);
         }
 
         public bool GetBoolOutput(int index)
         {
+            CheckPushedInputs();
             CheckIndex(index, this.BoolOutputNodes.Length);
             return this.GetBoolNodeValue(this.BoolOutputNodes[index]);
         }
