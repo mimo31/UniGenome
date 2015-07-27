@@ -20,6 +20,8 @@ namespace UniGenome
         private long[] NumberInputsValues;
         private bool[] BoolInputsValues;
 
+        //Test?
+
         private Random R;
 
         public Genome(int boolInputs, int boolOutputs, int numberInputs, int numberOutputs, Random r)
