@@ -20,8 +20,6 @@ namespace UniGenome
         private long[] NumberInputsValues;
         private bool[] BoolInputsValues;
 
-        //Test?
-
         private Random R;
 
         public Genome(int boolInputs, int boolOutputs, int numberInputs, int numberOutputs, Random r)
@@ -59,7 +57,6 @@ namespace UniGenome
 
         public object Clone()
         {
-            Console.WriteLine("Clone called.");
             Genome clone = new Genome();
             clone.NumberOutputNodes = this.NumberOutputNodes.Clone<NodePointer>();
             clone.BoolOutputNodes = this.BoolOutputNodes.Clone<NodePointer>();
@@ -75,7 +72,6 @@ namespace UniGenome
 
         private List<NodePointer> GetDependencies(NodePointer node)
         {
-            Console.WriteLine("Get dependencies called.");
             List<NodePointer> dependencies = new List<NodePointer>();
             if (node.Type == NodeType.Operator)
             {
@@ -99,7 +95,6 @@ namespace UniGenome
 
         private NodePointer GetNumberNode(bool dontDepend, NodePointer dontDependOn)
         {
-            Console.WriteLine("Get number node called.");
             if (this.R.Next(8) != 0)
             {
                 List<NodePointer> availiblePointers = new List<NodePointer>();
@@ -111,7 +106,7 @@ namespace UniGenome
                     possibleNodePointer.IsNumber = true;
                     if (dontDepend)
                     {
-                        if (this.GetDependencies(possibleNodePointer).ContainsValue(dontDependOn))
+                        if (!this.GetDependencies(possibleNodePointer).ContainsValue(dontDependOn))
                         {
                             availiblePointers.Add(possibleNodePointer);
                         }
@@ -129,7 +124,7 @@ namespace UniGenome
                     possibleNodePointer.IsNumber = true;
                     if (dontDepend)
                     {
-                        if (this.GetDependencies(possibleNodePointer).ContainsValue(dontDependOn))
+                        if (!this.GetDependencies(possibleNodePointer).ContainsValue(dontDependOn))
                         {
                             availiblePointers.Add(possibleNodePointer);
                         }
@@ -207,7 +202,6 @@ namespace UniGenome
 
         private NodePointer GetBoolNode(bool dontDepend, NodePointer dontDependOn)
         {
-            Console.WriteLine("Get bool node called.");
             if (this.R.Next(8) != 0)
             {
                 List<NodePointer> availiblePointers = new List<NodePointer>();
@@ -219,7 +213,7 @@ namespace UniGenome
                     possibleNodePointer.IsNumber = false;
                     if (dontDepend)
                     {
-                        if (this.GetDependencies(possibleNodePointer).ContainsValue(dontDependOn))
+                        if (!this.GetDependencies(possibleNodePointer).ContainsValue(dontDependOn))
                         {
                             availiblePointers.Add(possibleNodePointer);
                         }
@@ -237,7 +231,7 @@ namespace UniGenome
                     possibleNodePointer.IsNumber = false;
                     if (dontDepend)
                     {
-                        if (this.GetDependencies(possibleNodePointer).ContainsValue(dontDependOn))
+                        if (!this.GetDependencies(possibleNodePointer).ContainsValue(dontDependOn))
                         {
                             availiblePointers.Add(possibleNodePointer);
                         }
@@ -331,7 +325,6 @@ namespace UniGenome
 
         private void MutateNode(NodePointer node)
         {
-            Console.WriteLine("Mutate node called.");
             if (node.Type == NodeType.Operator)
             {
                 if (node.IsNumber)
