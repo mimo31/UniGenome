@@ -95,59 +95,115 @@ namespace UniGenome
             return dependencies;
         }
 
+        private List<NodePointer> GetAvalibleNumberNodes(bool dontDepend, NodePointer dontDependOn)
+        {
+            List<NodePointer> availiblePointers = new List<NodePointer>();
+            for (int i = 0; i < this.NumberConstants.Count; i++)
+            {
+                NodePointer possibleNodePointer = new NodePointer();
+                possibleNodePointer.Index = i;
+                possibleNodePointer.Type = NodeType.Constant;
+                possibleNodePointer.IsNumber = true;
+                if (dontDepend)
+                {
+                    if (!this.GetDependencies(possibleNodePointer).ContainsValue(dontDependOn))
+                    {
+                        availiblePointers.Add(possibleNodePointer);
+                    }
+                }
+                else
+                {
+                    availiblePointers.Add(possibleNodePointer);
+                }
+            }
+            for (int i = 0; i < this.NumberOperators.Count; i++)
+            {
+                NodePointer possibleNodePointer = new NodePointer();
+                possibleNodePointer.Index = i;
+                possibleNodePointer.Type = NodeType.Operator;
+                possibleNodePointer.IsNumber = true;
+                if (dontDepend)
+                {
+                    if (!this.GetDependencies(possibleNodePointer).ContainsValue(dontDependOn))
+                    {
+                        availiblePointers.Add(possibleNodePointer);
+                    }
+                }
+                else
+                {
+                    availiblePointers.Add(possibleNodePointer);
+                }
+            }
+            for (int i = 0; i < this.NumberOfNumberInputs; i++)
+            {
+                NodePointer nodePointer = new NodePointer();
+                nodePointer.Index = i;
+                nodePointer.Type = NodeType.Input;
+                nodePointer.IsNumber = true;
+                availiblePointers.Add(nodePointer);
+            }
+            return availiblePointers;
+        }
+
+        private List<NodePointer> GetAvalibleBoolNodes(bool dontDepend, NodePointer dontDependOn)
+        {
+            List<NodePointer> availiblePointers = new List<NodePointer>();
+            for (int i = 0; i < this.BoolConstants.Count; i++)
+            {
+                NodePointer possibleNodePointer = new NodePointer();
+                possibleNodePointer.Index = i;
+                possibleNodePointer.Type = NodeType.Constant;
+                possibleNodePointer.IsNumber = false;
+                if (dontDepend)
+                {
+                    if (!this.GetDependencies(possibleNodePointer).ContainsValue(dontDependOn))
+                    {
+                        availiblePointers.Add(possibleNodePointer);
+                    }
+                }
+                else
+                {
+                    availiblePointers.Add(possibleNodePointer);
+                }
+            }
+            for (int i = 0; i < this.BoolOperators.Count; i++)
+            {
+                NodePointer possibleNodePointer = new NodePointer();
+                possibleNodePointer.Index = i;
+                possibleNodePointer.Type = NodeType.Operator;
+                possibleNodePointer.IsNumber = false;
+                if (dontDepend)
+                {
+                    if (!this.GetDependencies(possibleNodePointer).ContainsValue(dontDependOn))
+                    {
+                        availiblePointers.Add(possibleNodePointer);
+                    }
+                }
+                else
+                {
+                    availiblePointers.Add(possibleNodePointer);
+                }
+            }
+            for (int i = 0; i < this.NumberOfBoolInputs; i++)
+            {
+                NodePointer nodePointer = new NodePointer();
+                nodePointer.Index = i;
+                nodePointer.Type = NodeType.Input;
+                nodePointer.IsNumber = false;
+                availiblePointers.Add(nodePointer);
+            }
+            return availiblePointers;
+        }
+
         private NodePointer GetNumberNode(bool dontDepend, NodePointer dontDependOn)
         {
             if (this.R.Next(8) != 0)
             {
-                List<NodePointer> availiblePointers = new List<NodePointer>();
-                for (int i = 0; i < this.NumberConstants.Count; i++)
+                List<NodePointer> availibleNodes = this.GetAvalibleNumberNodes(dontDepend, dontDependOn);
+                if (availibleNodes.Count > 0)
                 {
-                    NodePointer possibleNodePointer = new NodePointer();
-                    possibleNodePointer.Index = i;
-                    possibleNodePointer.Type = NodeType.Constant;
-                    possibleNodePointer.IsNumber = true;
-                    if (dontDepend)
-                    {
-                        if (!this.GetDependencies(possibleNodePointer).ContainsValue(dontDependOn))
-                        {
-                            availiblePointers.Add(possibleNodePointer);
-                        }
-                    }
-                    else
-                    {
-                        availiblePointers.Add(possibleNodePointer);
-                    }
-                }
-                for (int i = 0; i < this.NumberOperators.Count; i++)
-                {
-                    NodePointer possibleNodePointer = new NodePointer();
-                    possibleNodePointer.Index = i;
-                    possibleNodePointer.Type = NodeType.Operator;
-                    possibleNodePointer.IsNumber = true;
-                    if (dontDepend)
-                    {
-                        if (!this.GetDependencies(possibleNodePointer).ContainsValue(dontDependOn))
-                        {
-                            availiblePointers.Add(possibleNodePointer);
-                        }
-                    }
-                    else
-                    {
-                        availiblePointers.Add(possibleNodePointer);
-                    }
-                }
-                for (int i = 0; i < this.NumberOfNumberInputs; i++)
-                {
-                    NodePointer nodePointer = new NodePointer();
-                    nodePointer.Index = i;
-                    nodePointer.Type = NodeType.Input;
-                    nodePointer.IsNumber = true;
-                    availiblePointers.Add(nodePointer);
-                }
-                if (availiblePointers.Count > 0)
-                {
-                    int selectedPointerIndex = R.Next(availiblePointers.Count);
-                    return availiblePointers[selectedPointerIndex];
+                    int selectedPointerIndex = R.Next(availibleNodes.Count);
+                    return availibleNodes[selectedPointerIndex];
                 }
             }
             if (this.R.Next(4) == 0)
@@ -206,55 +262,11 @@ namespace UniGenome
         {
             if (this.R.Next(8) != 0)
             {
-                List<NodePointer> availiblePointers = new List<NodePointer>();
-                for (int i = 0; i < this.BoolConstants.Count; i++)
+                List<NodePointer> availibleNodes = this.GetAvalibleBoolNodes(dontDepend, dontDependOn);
+                if (availibleNodes.Count > 0)
                 {
-                    NodePointer possibleNodePointer = new NodePointer();
-                    possibleNodePointer.Index = i;
-                    possibleNodePointer.Type = NodeType.Constant;
-                    possibleNodePointer.IsNumber = false;
-                    if (dontDepend)
-                    {
-                        if (!this.GetDependencies(possibleNodePointer).ContainsValue(dontDependOn))
-                        {
-                            availiblePointers.Add(possibleNodePointer);
-                        }
-                    }
-                    else
-                    {
-                        availiblePointers.Add(possibleNodePointer);
-                    }
-                }
-                for (int i = 0; i < this.BoolOperators.Count; i++)
-                {
-                    NodePointer possibleNodePointer = new NodePointer();
-                    possibleNodePointer.Index = i;
-                    possibleNodePointer.Type = NodeType.Operator;
-                    possibleNodePointer.IsNumber = false;
-                    if (dontDepend)
-                    {
-                        if (!this.GetDependencies(possibleNodePointer).ContainsValue(dontDependOn))
-                        {
-                            availiblePointers.Add(possibleNodePointer);
-                        }
-                    }
-                    else
-                    {
-                        availiblePointers.Add(possibleNodePointer);
-                    }
-                }
-                for (int i = 0; i < this.NumberOfBoolInputs; i++)
-                {
-                    NodePointer nodePointer = new NodePointer();
-                    nodePointer.Index = i;
-                    nodePointer.Type = NodeType.Input;
-                    nodePointer.IsNumber = false;
-                    availiblePointers.Add(nodePointer);
-                }
-                if (availiblePointers.Count > 0)
-                {
-                    int selectedPointerIndex = R.Next(availiblePointers.Count);
-                    return availiblePointers[selectedPointerIndex];
+                    int selectedPointerIndex = R.Next(availibleNodes.Count);
+                    return availibleNodes[selectedPointerIndex];
                 }
             }
             if (this.R.Next(4) == 0)
