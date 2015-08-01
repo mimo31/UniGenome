@@ -44,18 +44,18 @@ namespace UniGenome
             }
             for (int i = 0; i < numberOutputs; i++)
             {
-                NumberOutputNodes[i] = this.GetNumberNode(false, null);
+                NumberOutputNodes[i] = this.GetNumberNode(false, NodePointer.Empty);
             }
             for (int i = 0; i < boolOutputs; i++)
             {
-                BoolOutputNodes[i] = this.GetBoolNode(false, null);
+                BoolOutputNodes[i] = this.GetBoolNode(false, NodePointer.Empty);
             }
         }
 
         private Genome()
         {
 
-        } 
+        }
 
         public object Clone()
         {
@@ -398,7 +398,7 @@ namespace UniGenome
             {
                 if (this.R.Next(50) == 0)
                 {
-                    mutatedClone.NumberOutputNodes[i] = mutatedClone.GetNumberNode(false, null);
+                    mutatedClone.NumberOutputNodes[i] = mutatedClone.GetNumberNode(false, NodePointer.Empty);
                 }
                 else
                 {
@@ -409,7 +409,7 @@ namespace UniGenome
             {
                 if (this.R.Next(50) == 0)
                 {
-                    mutatedClone.BoolOutputNodes[i] = mutatedClone.GetBoolNode(false, null);
+                    mutatedClone.BoolOutputNodes[i] = mutatedClone.GetBoolNode(false, NodePointer.Empty);
                 }
                 else
                 {
@@ -598,11 +598,13 @@ namespace UniGenome
                             }
                         }
                     }
-                    for (int j = i + 1; j < usefulNodes.Count; j++)
+                    for (int j = 0; j < usefulNodes.Count; j++)
                     {
                         if (usefulNodes[j].Index > i && usefulNodes[j].Type == NodeType.Constant && usefulNodes[j].IsNumber)
                         {
-                            usefulNodes[j].Index--;
+                            NodePointer newPointer = usefulNodes[j];
+                            newPointer.Index--;
+                            usefulNodes[j] = newPointer;
                         }
                     }
                     i--;
@@ -650,11 +652,13 @@ namespace UniGenome
                             }
                         }
                     }
-                    for (int j = i + 1; j < usefulNodes.Count; j++)
+                    for (int j = 0; j < usefulNodes.Count; j++)
                     {
                         if (usefulNodes[j].Index > i && usefulNodes[j].Type == NodeType.Operator && usefulNodes[j].IsNumber)
                         {
-                            usefulNodes[j].Index--;
+                            NodePointer newPointer = usefulNodes[j];
+                            newPointer.Index--;
+                            usefulNodes[j] = newPointer;
                         }
                     }
                     i--;
@@ -702,11 +706,13 @@ namespace UniGenome
                             }
                         }
                     }
-                    for (int j = i + 1; j < usefulNodes.Count; j++)
+                    for (int j = 0; j < usefulNodes.Count; j++)
                     {
                         if (usefulNodes[j].Index > i && usefulNodes[j].Type == NodeType.Constant && !usefulNodes[j].IsNumber)
                         {
-                            usefulNodes[j].Index--;
+                            NodePointer newPointer = usefulNodes[j];
+                            newPointer.Index--;
+                            usefulNodes[j] = newPointer;
                         }
                     }
                     i--;
@@ -754,11 +760,13 @@ namespace UniGenome
                             }
                         }
                     }
-                    for (int j = i + 1; j < usefulNodes.Count; j++)
+                    for (int j = 0; j < usefulNodes.Count; j++)
                     {
                         if (usefulNodes[j].Index > i && usefulNodes[j].Type == NodeType.Operator && !usefulNodes[j].IsNumber)
                         {
-                            usefulNodes[j].Index--;
+                            NodePointer newPointer = usefulNodes[j];
+                            newPointer.Index--;
+                            usefulNodes[j] = newPointer;
                         }
                     }
                     i--;

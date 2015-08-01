@@ -8,7 +8,7 @@ namespace UniGenome
         Add, Subtract, Multiply, Divide, If
     }
 
-    public class NumberOperator : ICloneable
+    public struct NumberOperator : ICloneable
     {
         public NumberOperatorType Type{ get; set; }
         public NodePointer[] InputValues { get; set; }

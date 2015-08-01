@@ -9,11 +9,16 @@ namespace UniGenome
         Constant, Input, Operator
     }
 
-    public class NodePointer : ICloneable, IEquatable<NodePointer>
+    public struct NodePointer : ICloneable, IEquatable<NodePointer>
     {
         public int Index { get; set; }
         public NodeType Type { get; set; }
         public bool IsNumber { get; set; }
+
+        public static NodePointer Empty = new NodePointer()
+        {
+            Index = -1
+        };
 
         public object Clone()
         {

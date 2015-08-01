@@ -9,7 +9,7 @@ namespace UniGenome
         {
             foreach (NodePointer pointer in list)
             {
-                if (pointer.Type == value.Type && pointer.IsNumber == value.IsNumber && pointer.Index == pointer.Index)
+                if (pointer.Type == value.Type && pointer.IsNumber == value.IsNumber && pointer.Index == value.Index)
                 {
                     return true;
                 }
@@ -29,7 +29,14 @@ namespace UniGenome
             T[] newArray = new T[array.Length];
             for (int i = 0; i < array.Length; i++)
             {
-                newArray[i] = (T)array[i].Clone();
+                if (array[i] == null)
+                {
+                    newArray[i] = array[i];
+                }
+                else
+                {
+                    newArray[i] = (T)array[i].Clone();
+                }
             }
             return newArray;
         }

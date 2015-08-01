@@ -8,7 +8,7 @@ namespace UniGenome
         AND, NOT, OR, XOR, BiggerThan, Equals
     }
 
-    public class BoolOperator : ICloneable
+    public struct BoolOperator : ICloneable
     {
         public BoolOperatorType Type { get; set; }
         public NodePointer[] InputValues { get; set; }
