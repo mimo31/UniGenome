@@ -7,46 +7,58 @@ namespace UniGenome
     {
         public NodePointer[] NumberOutputNodes { get; private set; }
         public NodePointer[] BoolOutputNodes { get; private set; }
-
-        public int NumberOfNumberInputs { get; private set; }
-        public int NumberOfBoolInputs { get; private set; }
+        public NodePointer[] DoubleOutputsNodes { get; private set; }
 
         public List<long> NumberConstants { get; private set; }
         public List<bool> BoolConstants { get; private set; }
+        public List<double> DoubleConstants { get; private set; }
 
-        public List<NumberOperator> NumberOperators { get; private set; }
-        public List<BoolOperator> BoolOperators { get; private set; }
+        public List<OperatorNode<long>> NumberOperators { get; private set; }
+        public List<OperatorNode<bool>> BoolOperators { get; private set; }
+        public List<OperatorNode<double>> DoubleOperators { get; private set; }
 
         public bool InputsPushed { get; private set; }
 
         private long[] NumberInputsValues;
         private bool[] BoolInputsValues;
+        private double[] DoubleInputsValues;
+
+        public readonly GenomeFormat Format;
 
         private Random R;
 
-        public Genome(int boolInputs, int boolOutputs, int numberInputs, int numberOutputs, Random r)
+        public Genome(Random r, GenomeFormat format)
         {
-            this.NumberOfBoolInputs = boolInputs;
-            this.NumberOfNumberInputs = numberInputs;
-            this.NumberOutputNodes = new NodePointer[numberOutputs];
-            this.BoolOutputNodes = new NodePointer[boolOutputs];
-            this.BoolConstants = new List<bool>();
-            this.NumberConstants = new List<long>();
-            this.NumberOperators = new List<NumberOperator>();
-            this.BoolOperators = new List<BoolOperator>();
+            if (format != null)
+            {
+                this.Format = format;
+            }
+            else
+            {
+                throw new NullReferenceException("Format argument equals null.");
+            }
             if (r != null)
             {
                 this.R = r;
             }
             else
             {
-                throw new Exception("Random object passed as argument equals null.");
+                throw new NullReferenceException("R argument equals null.");
             }
-            for (int i = 0; i < numberOutputs; i++)
+            this.NumberOutputNodes = new NodePointer[this.Format.NumberOutputs];
+            this.BoolOutputNodes = new NodePointer[this.Format.BoolOutputs];
+            this.DoubleOutputsNodes = new NodePointer[this.Format.DoubleOutputs];
+            this.NumberConstants = new List<long>();
+            this.BoolConstants = new List<bool>();
+            this.DoubleConstants = new List<double>();
+            this.NumberOperators = new List<OperatorNode<long>>();
+            this.BoolOperators = new List<OperatorNode<bool>>();
+            this.DoubleOperators = new List<OperatorNode<double>>();
+            for (int i = 0; i < this.Format.NumberOutputs; i++)
             {
                 NumberOutputNodes[i] = this.GetNumberNode(false, NodePointer.Empty);
             }
-            for (int i = 0; i < boolOutputs; i++)
+            for (int i = 0; i < this.Format.BoolOutputs; i++)
             {
                 BoolOutputNodes[i] = this.GetBoolNode(false, NodePointer.Empty);
             }
@@ -217,7 +229,7 @@ namespace UniGenome
             }
             else
             {
-                NumberOperator newOperator = new NumberOperator();
+                NumberOperatorNode newOperator = new NumberOperatorNode();
                 int randomNumber = this.R.Next(5);
                 switch (randomNumber)
                 {
@@ -280,7 +292,7 @@ namespace UniGenome
             }
             else
             {
-                BoolOperator newOperator = new BoolOperator();
+                BoolOperatorNode newOperator = new BoolOperatorNode();
                 int randomNumber = this.R.Next(6);
                 switch (randomNumber)
                 {
@@ -466,7 +478,7 @@ namespace UniGenome
             }
             else
             {
-                BoolOperator boolOperator = this.BoolOperators[node.Index];
+                BoolOperatorNode boolOperator = this.BoolOperators[node.Index];
                 switch (boolOperator.Type)
                 {
                     case BoolOperatorType.AND:
@@ -499,7 +511,7 @@ namespace UniGenome
             }
             else
             {
-                NumberOperator numberOperator = this.NumberOperators[node.Index];
+                NumberOperatorNode numberOperator = this.NumberOperators[node.Index];
                 switch (numberOperator.Type)
                 {
                     case NumberOperatorType.Add:
