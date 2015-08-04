@@ -9,7 +9,7 @@ namespace UniGenome
         Constant, Input, Operator
     }
 
-    public enum Type
+    public enum ValueType
     {
         Number, Bool, Double
     }
@@ -18,7 +18,7 @@ namespace UniGenome
     {
         public int Index { get; set; }
         public NodeType Type { get; set; }
-        public Type ValueType { get; set; }
+        public ValueType ValueType { get; set; }
 
         public static NodePointer Empty = new NodePointer()
         {

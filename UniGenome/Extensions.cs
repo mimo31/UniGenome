@@ -17,6 +17,13 @@ namespace UniGenome
             return false;
         }
 
+        public static double NextFullDouble(this Random r)
+        {
+            byte[] buffer = new byte[sizeof(double)];
+            r.NextBytes(buffer);
+            return BitConverter.ToDouble(buffer, 0);
+        }
+
         public static long NextLong(this Random r)
         {
             byte[] buffer = new byte[sizeof(long)];

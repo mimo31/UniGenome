@@ -91,11 +91,11 @@ namespace UniGenome
             if (node.Type == NodeType.Operator)
             {
                 NodePointer[] inputValues;
-                if (node.ValueType == Type.Number)
+                if (node.ValueType == ValueType.Number)
                 {
                     inputValues = this.NumberOperators[node.Index].InputValues;
                 }
-                else if (node.ValueType == Type.Bool)
+                else if (node.ValueType == ValueType.Bool)
                 {
                     inputValues = this.BoolOperators[node.Index].InputValues;
                 }
@@ -112,7 +112,7 @@ namespace UniGenome
             return dependencies;
         }
 
-        private List<NodePointer> GetAvailableNodes(bool dontDepend, NodePointer dontDependOn, Type valueType)
+        private List<NodePointer> GetAvailableNodes(bool dontDepend, NodePointer dontDependOn, ValueType valueType)
         {
             List<NodePointer> possiblePointers = new List<NodePointer>();
             List<NodePointer> availiblePointers = new List<NodePointer>();
@@ -121,17 +121,17 @@ namespace UniGenome
             int inputsLength;
             switch (valueType)
             {
-                case Type.Number:
+                case ValueType.Number:
                     constantsLength = this.NumberConstants.Count;
                     operatorsLength = this.NumberOperators.Count;
                     inputsLength = this.Format.NumberInputs;
                     break;
-                case Type.Bool:
+                case ValueType.Bool:
                     constantsLength = this.BoolConstants.Count;
                     operatorsLength = this.BoolOperators.Count;
                     inputsLength = this.Format.BoolInputs;
                     break;
-                case Type.Double:
+                case ValueType.Double:
                     constantsLength = this.DoubleConstants.Count;
                     operatorsLength = this.DoubleOperators.Count;
                     inputsLength = this.Format.DoubleInputs;
@@ -180,133 +180,82 @@ namespace UniGenome
             return availiblePointers;
         }
 
-        private NodePointer GetNumberNode(bool dontDepend, NodePointer dontDependOn)
+        private OperatorNode<T> CreateOperatorNode<T>(Operator<T> newOperator, bool dontDepend, NodePointer dontDependOn)
         {
-            if (this.R.Next(8) != 0)
+            OperatorNode<T> node = new OperatorNode<T>();
+            node.Operation = newOperator.Operation;
+            node.NumberInputs = new NodePointer[newOperator.NumberInputs];
+            node.BoolInputs = new NodePointer[newOperator.BoolInputs];
+            node.DoubleInputs = new NodePointer[newOperator.DoubleInputs];
+            for (int i = 0; i < newOperator.NumberInputs; i++)
             {
-                List<NodePointer> availibleNodes = this.GetAvalibleNumberNodes(dontDepend, dontDependOn);
-                if (availibleNodes.Count > 0)
-                {
-                    int selectedPointerIndex = R.Next(availibleNodes.Count);
-                    return availibleNodes[selectedPointerIndex];
-                }
+                node.NumberInputs[i] = this.GetNode(dontDepend, dontDependOn, ValueType.Number);
             }
-            if (this.R.Next(4) == 0)
+            for (int i = 0; i < newOperator.BoolInputs; i++)
             {
-                this.NumberConstants.Add(R.NextLong());
-                NodePointer pointer = new NodePointer();
-                pointer.Type = NodeType.Constant;
-                pointer.IsNumber = true;
-                pointer.Index = this.NumberConstants.Count - 1;
-                return pointer;
+                node.BoolInputs[i] = this.GetNode(dontDepend, dontDependOn, ValueType.Bool);
             }
-            else
+            for (int i = 0; i < newOperator.DoubleInputs; i++)
             {
-                NumberOperatorNode newOperator = new NumberOperatorNode();
-                int randomNumber = this.R.Next(5);
-                switch (randomNumber)
-                {
-                    case (int)NumberOperatorType.Add:
-                        newOperator.InputValues = new NodePointer[2];
-                        newOperator.InputValues[0] = this.GetNumberNode(dontDepend, dontDependOn);
-                        newOperator.InputValues[1] = this.GetNumberNode(dontDepend, dontDependOn);
-                        break;
-                    case (int)NumberOperatorType.Subtract:
-                        newOperator.InputValues = new NodePointer[2];
-                        newOperator.InputValues[0] = this.GetNumberNode(dontDepend, dontDependOn);
-                        newOperator.InputValues[1] = this.GetNumberNode(dontDepend, dontDependOn);
-                        break;
-                    case (int)NumberOperatorType.Multiply:
-                        newOperator.InputValues = new NodePointer[2];
-                        newOperator.InputValues[0] = this.GetNumberNode(dontDepend, dontDependOn);
-                        newOperator.InputValues[1] = this.GetNumberNode(dontDepend, dontDependOn);
-                        break;
-                    case (int)NumberOperatorType.Divide:
-                        newOperator.InputValues = new NodePointer[2];
-                        newOperator.InputValues[0] = this.GetNumberNode(dontDepend, dontDependOn);
-                        newOperator.InputValues[1] = this.GetNumberNode(dontDepend, dontDependOn);
-                        break;
-                    case (int)NumberOperatorType.If:
-                        newOperator.InputValues = new NodePointer[3];
-                        newOperator.InputValues[0] = this.GetBoolNode(dontDepend, dontDependOn);
-                        newOperator.InputValues[1] = this.GetNumberNode(dontDepend, dontDependOn);
-                        newOperator.InputValues[2] = this.GetNumberNode(dontDepend, dontDependOn);
-                        break;
-                }
-                newOperator.Type = (NumberOperatorType)randomNumber;
-                this.NumberOperators.Add(newOperator);
-                NodePointer pointer = new NodePointer();
-                pointer.Index = this.NumberOperators.Count - 1;
-                pointer.Type = NodeType.Operator;
-                pointer.IsNumber = true;
-                return pointer;
+                node.DoubleInputs[i] = this.GetNode(dontDepend, dontDependOn, ValueType.Double);
             }
+            return node;
         }
 
-        private NodePointer GetBoolNode(bool dontDepend, NodePointer dontDependOn)
+        private NodePointer GetNode(bool dontDepend, NodePointer dontDependOn, ValueType valueType)
         {
             if (this.R.Next(8) != 0)
             {
-                List<NodePointer> availibleNodes = this.GetAvalibleBoolNodes(dontDepend, dontDependOn);
+                List<NodePointer> availibleNodes = this.GetAvailableNodes(dontDepend, dontDependOn, valueType);
                 if (availibleNodes.Count > 0)
                 {
                     int selectedPointerIndex = R.Next(availibleNodes.Count);
                     return availibleNodes[selectedPointerIndex];
                 }
             }
-            if (this.R.Next(4) == 0)
+            int numberofOperators = this.Format.GetNumberOfOperators(valueType);
+            if (this.R.Next(4) != 0 && numberofOperators != 0)
             {
-                this.BoolConstants.Add(R.Next(2) == 1);
-                NodePointer pointer = new NodePointer();
-                pointer.Type = NodeType.Constant;
-                pointer.IsNumber = false;
-                pointer.Index = this.BoolConstants.Count - 1;
-                return pointer;
-            }
-            else
-            {
-                BoolOperatorNode newOperator = new BoolOperatorNode();
-                int randomNumber = this.R.Next(6);
-                switch (randomNumber)
+                int operatorIndex = this.R.Next(numberofOperators);
+                NodePointer operatorNodePointer = new NodePointer();
+                operatorNodePointer.Type = NodeType.Operator;
+                operatorNodePointer.ValueType = valueType;
+                switch (valueType)
                 {
-                    case (int)BoolOperatorType.AND:
-                        newOperator.InputValues = new NodePointer[2];
-                        newOperator.InputValues[0] = this.GetBoolNode(dontDepend, dontDependOn);
-                        newOperator.InputValues[1] = this.GetBoolNode(dontDepend, dontDependOn);
+                    case ValueType.Number:
+                        operatorNodePointer.Index = this.NumberOperators.Count;
+                        this.NumberOperators.Add(CreateOperatorNode(this.Format.NumberOperators[operatorIndex], dontDepend, dontDependOn));
                         break;
-                    case (int)BoolOperatorType.NOT:
-                        newOperator.InputValues = new NodePointer[1];
-                        newOperator.InputValues[0] = this.GetBoolNode(dontDepend, dontDependOn);
+                    case ValueType.Bool:
+                        operatorNodePointer.Index = this.BoolOperators.Count;
+                        this.BoolOperators.Add(CreateOperatorNode(this.Format.BoolOperators[operatorIndex], dontDepend, dontDependOn));
                         break;
-                    case (int)BoolOperatorType.OR:
-                        newOperator.InputValues = new NodePointer[2];
-                        newOperator.InputValues[0] = this.GetBoolNode(dontDepend, dontDependOn);
-                        newOperator.InputValues[1] = this.GetBoolNode(dontDepend, dontDependOn);
-                        break;
-                    case (int)BoolOperatorType.XOR:
-                        newOperator.InputValues = new NodePointer[2];
-                        newOperator.InputValues[0] = this.GetBoolNode(dontDepend, dontDependOn);
-                        newOperator.InputValues[1] = this.GetBoolNode(dontDepend, dontDependOn);
-                        break;
-                    case (int)BoolOperatorType.BiggerThan:
-                        newOperator.InputValues = new NodePointer[2];
-                        newOperator.InputValues[0] = this.GetNumberNode(dontDepend, dontDependOn);
-                        newOperator.InputValues[1] = this.GetNumberNode(dontDepend, dontDependOn);
-                        break;
-                    case (int)BoolOperatorType.Equals:
-                        newOperator.InputValues = new NodePointer[2];
-                        newOperator.InputValues[0] = this.GetNumberNode(dontDepend, dontDependOn);
-                        newOperator.InputValues[1] = this.GetNumberNode(dontDepend, dontDependOn);
+                    case ValueType.Double:
+                        operatorNodePointer.Index = this.DoubleOperators.Count;
+                        this.DoubleOperators.Add(CreateOperatorNode(this.Format.DoubleOperators[operatorIndex], dontDepend, dontDependOn));
                         break;
                 }
-                newOperator.Type = (BoolOperatorType)randomNumber;
-                this.BoolOperators.Add(newOperator);
-                NodePointer pointer = new NodePointer();
-                pointer.Index = this.BoolOperators.Count - 1;
-                pointer.Type = NodeType.Operator;
-                pointer.IsNumber = false;
-                return pointer;
+                return operatorNodePointer;
             }
+            NodePointer pointer = new NodePointer();
+            switch (valueType)
+            {
+                case ValueType.Number:
+                    pointer.Index = this.NumberConstants.Count;
+                    this.NumberConstants.Add(this.R.NextLong());
+                    break;
+                case ValueType.Bool:
+                    pointer.Index = this.BoolConstants.Count;
+                    this.BoolConstants.Add(this.R.Next(2) == 0);
+                    break;
+                case ValueType.Double:
+                    pointer.Index = this.DoubleConstants.Count;
+                    this.DoubleConstants.Add(this.R.NextFullDouble());
+                    break;
+            }
+            pointer.Type = NodeType.Constant;
+            pointer.ValueType = valueType;
+            return pointer;
         }
 
         public void PushInputs(bool[] boolInputs, long[] numberInputs)

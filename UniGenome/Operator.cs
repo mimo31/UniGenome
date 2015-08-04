@@ -5,10 +5,10 @@ namespace UniGenome
 
     public class Operator<T>
     {
-        public Func<long[], bool[], double[], T> Operation { get; set; }
-        public int NumberInputs { get; set; }
-        public int BoolInputs { get; set; }
-        public int DoubleInputs { get; set; }
+        public readonly Func<long[], bool[], double[], T> Operation;
+        public readonly int NumberInputs;
+        public readonly int BoolInputs;
+        public readonly int DoubleInputs;
 
         public Operator(Func<long[], bool[], double[], T> operation, int numberInputs, int boolInputs, int doubleInputs)
         {
