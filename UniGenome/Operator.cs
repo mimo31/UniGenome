@@ -18,11 +18,6 @@ namespace UniGenome
             this.DoubleInputs = doubleInputs;
         }
 
-        public T Evalute(long[] numberInputs, bool[] boolInputs, double[] doubleInputs)
-        {
-            return this.Operation(numberInputs, boolInputs, doubleInputs);
-        }
-
         //Bool operators
         public static readonly Lazy<Operator<bool>> AND = new Lazy<Operator<bool>>(() => new Operator<bool>((numberInputs, boolInputs, doubleInputs) => boolInputs[0] || boolInputs[1], 0, 2, 0));
 

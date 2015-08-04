@@ -7,7 +7,7 @@ namespace UniGenome
     {
         public NodePointer[] NumberOutputNodes { get; private set; }
         public NodePointer[] BoolOutputNodes { get; private set; }
-        public NodePointer[] DoubleOutputsNodes { get; private set; }
+        public NodePointer[] DoubleOutputNodes { get; private set; }
 
         public List<long> NumberConstants { get; private set; }
         public List<bool> BoolConstants { get; private set; }
@@ -47,7 +47,7 @@ namespace UniGenome
             }
             this.NumberOutputNodes = new NodePointer[this.Format.NumberOutputs];
             this.BoolOutputNodes = new NodePointer[this.Format.BoolOutputs];
-            this.DoubleOutputsNodes = new NodePointer[this.Format.DoubleOutputs];
+            this.DoubleOutputNodes = new NodePointer[this.Format.DoubleOutputs];
             this.NumberConstants = new List<long>();
             this.BoolConstants = new List<bool>();
             this.DoubleConstants = new List<double>();
@@ -56,11 +56,15 @@ namespace UniGenome
             this.DoubleOperators = new List<OperatorNode<double>>();
             for (int i = 0; i < this.Format.NumberOutputs; i++)
             {
-                NumberOutputNodes[i] = this.GetNumberNode(false, NodePointer.Empty);
+                this.NumberOutputNodes[i] = this.GetNode(false, NodePointer.Empty, ValueType.Number);
             }
             for (int i = 0; i < this.Format.BoolOutputs; i++)
             {
-                BoolOutputNodes[i] = this.GetBoolNode(false, NodePointer.Empty);
+                this.BoolOutputNodes[i] = this.GetNode(false, NodePointer.Empty, ValueType.Bool);
+            }
+            for (int i = 0; i < this.Format.DoubleOutputs; i++)
+            {
+                this.DoubleOutputNodes[i] = this.GetNode(false, NodePointer.Empty, ValueType.Double);
             }
         }
 
@@ -74,7 +78,7 @@ namespace UniGenome
             Genome clone = new Genome(this.Format);
             clone.NumberOutputNodes = this.NumberOutputNodes.Clone<NodePointer>();
             clone.BoolOutputNodes = this.BoolOutputNodes.Clone<NodePointer>();
-            clone.DoubleOutputsNodes = this.DoubleOutputsNodes.Clone<NodePointer>();
+            clone.DoubleOutputNodes = this.DoubleOutputNodes.Clone<NodePointer>();
             clone.NumberConstants = this.NumberConstants.Clone();
             clone.BoolConstants = this.BoolConstants.Clone();
             clone.DoubleConstants = this.DoubleConstants.Clone();
@@ -90,18 +94,24 @@ namespace UniGenome
             List<NodePointer> dependencies = new List<NodePointer>();
             if (node.Type == NodeType.Operator)
             {
-                NodePointer[] inputValues;
-                if (node.ValueType == ValueType.Number)
+                List<NodePointer> inputValues = new List<NodePointer>();
+                switch (node.ValueType)
                 {
-                    inputValues = this.NumberOperators[node.Index].InputValues;
-                }
-                else if (node.ValueType == ValueType.Bool)
-                {
-                    inputValues = this.BoolOperators[node.Index].InputValues;
-                }
-                else
-                {
-                    inputValues = this.DoubleOperators[node.Index].InputValues;
+                    case ValueType.Number:
+                        inputValues.AddRange(this.NumberOperators[node.Index].NumberInputs);
+                        inputValues.AddRange(this.NumberOperators[node.Index].BoolInputs);
+                        inputValues.AddRange(this.NumberOperators[node.Index].DoubleInputs);
+                        break;
+                    case ValueType.Bool:
+                        inputValues.AddRange(this.BoolOperators[node.Index].NumberInputs);
+                        inputValues.AddRange(this.BoolOperators[node.Index].BoolInputs);
+                        inputValues.AddRange(this.BoolOperators[node.Index].DoubleInputs);
+                        break;
+                    case ValueType.Double:
+                        inputValues.AddRange(this.DoubleOperators[node.Index].NumberInputs);
+                        inputValues.AddRange(this.DoubleOperators[node.Index].BoolInputs);
+                        inputValues.AddRange(this.DoubleOperators[node.Index].DoubleInputs);
+                        break;
                 }
                 foreach (NodePointer inputValue in inputValues)
                 {
@@ -258,17 +268,33 @@ namespace UniGenome
             return pointer;
         }
 
-        public void PushInputs(bool[] boolInputs, long[] numberInputs)
+        public void PushInputs(bool[] boolInputs, long[] numberInputs, double[] doubleInputs)
         {
-            if (this.NumberOfBoolInputs == boolInputs.Length && this.NumberOfNumberInputs == numberInputs.Length)
+            if (this.Format.NumberInputs == numberInputs.Length && this.Format.BoolInputs == boolInputs.Length && this.Format.DoubleInputs == doubleInputs.Length)
             {
                 this.BoolInputsValues = boolInputs;
                 this.NumberInputsValues = numberInputs;
+                this.DoubleInputsValues = doubleInputs;
                 this.InputsPushed = true;
             }
             else
             {
-                throw new Exception("Leght of the input arrays doesn't match number of Genome inputs.");
+                throw new Exception("Lenght of the input arrays doesn't match Genome format.");
+            }
+        }
+
+        private void MutateInputArray(NodePointer[] inputs, NodePointer parentNode)
+        {
+            for (int i = 0; i < inputs.Length; i++)
+            {
+                if (this.R.Next(50) == 0)
+                {
+                    inputs[i] = this.GetNode(true, parentNode, inputs[0].ValueType);
+                }
+                else
+                {
+                    this.MutateNode(inputs[i]);
+                }
             }
         }
 
@@ -276,80 +302,56 @@ namespace UniGenome
         {
             if (node.Type == NodeType.Operator)
             {
-                if (node.IsNumber)
+                NodePointer[] numberInputs;
+                NodePointer[] boolInputs;
+                NodePointer[] doubleInputs;
+                switch (node.ValueType)
                 {
-                    for (int i = 0; i < this.NumberOperators[node.Index].InputValues.Length; i++)
-                    {
-                        if (this.R.Next(50) == 0)
-                        {
-                            NodePointer newNode;
-                            if (this.NumberOperators[node.Index].InputValues[i].IsNumber)
-                            {
-                                newNode =  this.GetNumberNode(true, node);
-                            }
-                            else
-                            {
-                                newNode = this.GetBoolNode(true, node);
-                            }
-                            this.NumberOperators[node.Index].InputValues[i] = newNode;
-                        }
-                        else
-                        {
-                            this.MutateNode(this.NumberOperators[node.Index].InputValues[i]);
-                        }
-                    }
+                    case ValueType.Number:
+                        numberInputs = this.NumberOperators[node.Index].NumberInputs;
+                        boolInputs = this.NumberOperators[node.Index].BoolInputs;
+                        doubleInputs = this.NumberOperators[node.Index].DoubleInputs;
+                        break;
+                    case ValueType.Bool:
+                        numberInputs = this.BoolOperators[node.Index].NumberInputs;
+                        boolInputs = this.BoolOperators[node.Index].BoolInputs;
+                        doubleInputs = this.BoolOperators[node.Index].DoubleInputs;
+                        break;
+                    case ValueType.Double:
+                        numberInputs = this.DoubleOperators[node.Index].NumberInputs;
+                        boolInputs = this.DoubleOperators[node.Index].BoolInputs;
+                        doubleInputs = this.DoubleOperators[node.Index].DoubleInputs;
+                        break;
+                    default:
+                        throw new Exception("Switch overflow.");
+                }
+                this.MutateInputArray(numberInputs, node);
+                this.MutateInputArray(boolInputs, node);
+                this.MutateInputArray(doubleInputs, node);
+            }
+        }
+
+        public void MutateOutputNodes(NodePointer[] outputs)
+        {
+            for (int i = 0; i < outputs.Length; i++)
+            {
+                if (this.R.Next(50) == 0)
+                {
+                    outputs[i] = this.GetNode(false, NodePointer.Empty, outputs[0].ValueType);
                 }
                 else
                 {
-                    for (int i = 0; i < this.BoolOperators[node.Index].InputValues.Length; i++)
-                    {
-                        if (this.R.Next(50) == 0)
-                        {
-                            NodePointer newNode;
-                            if (this.BoolOperators[node.Index].InputValues[i].IsNumber)
-                            {
-                                newNode = this.GetNumberNode(true, node);
-                            }
-                            else
-                            {
-                                newNode = this.GetBoolNode(true, node);
-                            }
-                            this.BoolOperators[node.Index].InputValues[i] = newNode;
-                        }
-                        else
-                        {
-                            this.MutateNode(this.BoolOperators[node.Index].InputValues[i]);
-                        }
-                    }
+                    this.MutateNode(outputs[i]);
                 }
             }
         }
 
         public Genome GetMutation()
         {
-            Genome mutatedClone = (Genome)this.Clone();
-            for (int i = 0; i < mutatedClone.NumberOutputNodes.Length; i++)
-            {
-                if (this.R.Next(50) == 0)
-                {
-                    mutatedClone.NumberOutputNodes[i] = mutatedClone.GetNumberNode(false, NodePointer.Empty);
-                }
-                else
-                {
-                    mutatedClone.MutateNode(mutatedClone.NumberOutputNodes[i]);
-                }
-            }
-            for (int i = 0; i < mutatedClone.BoolOutputNodes.Length; i++)
-            {
-                if (this.R.Next(50) == 0)
-                {
-                    mutatedClone.BoolOutputNodes[i] = mutatedClone.GetBoolNode(false, NodePointer.Empty);
-                }
-                else
-                {
-                    mutatedClone.MutateNode(mutatedClone.BoolOutputNodes[i]);
-                }
-            }
+            Genome mutatedClone = this.Clone();
+            mutatedClone.MutateOutputNodes(mutatedClone.NumberOutputNodes);
+            mutatedClone.MutateOutputNodes(mutatedClone.BoolOutputNodes);
+            mutatedClone.MutateOutputNodes(mutatedClone.DoubleOutputNodes);
             mutatedClone.RemoveUnusedNodes();
             return mutatedClone;
         }
@@ -388,37 +390,31 @@ namespace UniGenome
             return this.GetBoolNodeValue(this.BoolOutputNodes[index]);
         }
 
-        private bool GetBoolNodeValue(NodePointer node)
+        public double GetDoubleOutput(int index)
         {
-            if (node.Type == NodeType.Constant)
+            CheckPushedInputs();
+            CheckIndex(index, this.DoubleOutputNodes.Length);
+            return this.GetDoubleNodeValue(this.DoubleOutputNodes[index]);
+        }
+
+        private T GetOperatorValue<T>(OperatorNode<T> operatorNode)
+        {
+            long[] numberInputs = new long[operatorNode.NumberInputs.Length];
+            bool[] boolInputs = new bool[operatorNode.BoolInputs.Length];
+            double[] doubleInputs = new double[operatorNode.DoubleInputs.Length];
+            for (int i = 0; i < numberInputs.Length; i++)
             {
-                return this.BoolConstants[node.Index];
+                numberInputs[i] = this.GetNumberNodeValue(operatorNode.NumberInputs[i]);
             }
-            else if (node.Type == NodeType.Input)
+            for (int i = 0; i < boolInputs.Length; i++)
             {
-                return this.BoolInputsValues[node.Index];
+                boolInputs[i] = this.GetBoolNodeValue(operatorNode.BoolInputs[i]);
             }
-            else
+            for (int i = 0; i < doubleInputs.Length; i++)
             {
-                BoolOperatorNode boolOperator = this.BoolOperators[node.Index];
-                switch (boolOperator.Type)
-                {
-                    case BoolOperatorType.AND:
-                        return this.GetBoolNodeValue(boolOperator.InputValues[0]) && this.GetBoolNodeValue(boolOperator.InputValues[1]);
-                    case BoolOperatorType.NOT:
-                        return !this.GetBoolNodeValue(boolOperator.InputValues[0]);
-                    case BoolOperatorType.OR:
-                        return this.GetBoolNodeValue(boolOperator.InputValues[0]) || this.GetBoolNodeValue(boolOperator.InputValues[1]);
-                    case BoolOperatorType.XOR:
-                        return this.GetBoolNodeValue(boolOperator.InputValues[0]) ^ this.GetBoolNodeValue(boolOperator.InputValues[1]);
-                    case BoolOperatorType.BiggerThan:
-                        return this.GetNumberNodeValue(boolOperator.InputValues[0]) > this.GetNumberNodeValue(boolOperator.InputValues[1]);
-                    case BoolOperatorType.Equals:
-                        return this.GetNumberNodeValue(boolOperator.InputValues[0]) == this.GetNumberNodeValue(boolOperator.InputValues[1]);
-                    default:
-                        throw new ArithmeticException("Switch overflow.");
-                }
+                doubleInputs[i] = this.GetDoubleNodeValue(operatorNode.DoubleInputs[i]);
             }
+            return operatorNode.Evalute(numberInputs, boolInputs, doubleInputs);
         }
 
         private long GetNumberNodeValue(NodePointer node)
@@ -433,45 +429,39 @@ namespace UniGenome
             }
             else
             {
-                NumberOperatorNode numberOperator = this.NumberOperators[node.Index];
-                switch (numberOperator.Type)
-                {
-                    case NumberOperatorType.Add:
-                        return this.GetNumberNodeValue(numberOperator.InputValues[0]) + this.GetNumberNodeValue(numberOperator.InputValues[1]);
-                    case NumberOperatorType.Subtract:
-                        return this.GetNumberNodeValue(numberOperator.InputValues[0]) - this.GetNumberNodeValue(numberOperator.InputValues[1]);
-                    case NumberOperatorType.Multiply:
-                        return this.GetNumberNodeValue(numberOperator.InputValues[0]) * this.GetNumberNodeValue(numberOperator.InputValues[1]);
-                    case NumberOperatorType.Divide:
-                        long dividend = this.GetNumberNodeValue(numberOperator.InputValues[0]);
-                        long divisor = this.GetNumberNodeValue(numberOperator.InputValues[1]);
-                        if (divisor == 0)
-                        {
-                            if (dividend == 0)
-                            {
-                                return 1;
-                            }
-                            else
-                            {
-                                return long.MaxValue;
-                            }
-                        }
-                        else
-                        {
-                            return dividend / divisor;
-                        }
-                    case NumberOperatorType.If:
-                        if (this.GetBoolNodeValue(numberOperator.InputValues[0]))
-                        {
-                            return this.GetNumberNodeValue(numberOperator.InputValues[1]);
-                        }
-                        else
-                        {
-                            return this.GetNumberNodeValue(numberOperator.InputValues[2]);
-                        }
-                    default:
-                        throw new ArithmeticException("Switch overflow.");
-                }
+                return this.GetOperatorValue(this.NumberOperators[node.Index]);
+            }
+        }
+
+        private bool GetBoolNodeValue(NodePointer node)
+        {
+            if (node.Type == NodeType.Constant)
+            {
+                return this.BoolConstants[node.Index];
+            }
+            else if (node.Type == NodeType.Input)
+            {
+                return this.BoolInputsValues[node.Index];
+            }
+            else
+            {
+                return this.GetOperatorValue(this.BoolOperators[node.Index]);
+            }
+        }
+
+        private double GetDoubleNodeValue(NodePointer node)
+        {
+            if (node.Type == NodeType.Constant)
+            {
+                return this.DoubleConstants[node.Index];
+            }
+            else if (node.Type == NodeType.Input)
+            {
+                return this.DoubleInputsValues[node.Index];
+            }
+            else
+            {
+                return this.GetOperatorValue(this.DoubleOperators[node.Index]);
             }
         }
 
